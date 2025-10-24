@@ -223,6 +223,14 @@ Templates use `$variable` syntax for substitution. Key variables:
 ### Cython Compilation
 Runtime is compiled to platform-specific `.so` (Linux/macOS) or `.pyd` (Windows) extension module. This makes reverse engineering the decryption logic significantly harder.
 
+**IMPORTANT**: The compiled `.so` file MUST export `PyInit_codeenigma_runtime` symbol for Python to load it. The following compiler/linker flags have been carefully configured:
+- **Removed** `-fvisibility=hidden`: Would hide all symbols including PyInit
+- **Removed** `-flto`: Link-time optimization can cause symbol issues
+- **Removed** `--strip-all`: Would remove all symbols including PyInit
+- **Disabled** `strip` command: Preserves all necessary symbols
+
+The build process now includes symbol verification to ensure `PyInit_codeenigma_runtime` is present.
+
 ## Dependencies
 
 **Core**:
