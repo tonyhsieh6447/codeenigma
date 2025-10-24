@@ -85,10 +85,19 @@ def obfuscate(
 
     if expiration_date:
         try:
-            expiration_date = datetime.fromisoformat(expiration_date)
+            # Try to parse the date
+            # First, normalize timezone format: +0800 -> +08:00
+            import re
+            # Match timezone like +0800 or -0530 and convert to +08:00 or -05:30
+            expiration_date_normalized = re.sub(
+                r'([+-])(\d{2})(\d{2})$',
+                r'\1\2:\3',
+                expiration_date
+            )
+            expiration_date = datetime.fromisoformat(expiration_date_normalized)
         except ValueError:
             console.print(
-                "[bold red]Error: Invalid expiration date format. Please use YYYY-MM-DD HH:MM:SS+0000[/bold red]"
+                "[bold red]Error: Invalid expiration date format. Please use YYYY-MM-DD HH:MM:SS+0800 or YYYY-MM-DD HH:MM:SS+08:00[/bold red]"
             )
             raise typer.Exit(1) from None
 
