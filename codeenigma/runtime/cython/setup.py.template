@@ -22,7 +22,8 @@ if not is_macos:
     # Linux-only flags
     extra_link_args += [
         "-Wl,--gc-sections",
-        "-Wl,--strip-all"
+        # Note: Do NOT use --strip-all as it removes PyInit function needed by Python
+        # "-Wl,--strip-all"
     ]
 else:
     # macOS-safe alternatives (strip done manually later)
@@ -61,6 +62,7 @@ setup(
 try:
     so_file = next(p for p in os.listdir('.') if p.startswith("codeenigma_runtime") and p.endswith(".so"))
     print(f"Stripping binary: {so_file}")
-    subprocess.run(["strip", "-x", so_file], check=True)
+    # Use --strip-debug instead of -x to preserve dynamic symbols (including PyInit)
+    subprocess.run(["strip", "--strip-debug", so_file], check=True)
 except Exception as e:
     print(f"[Warning] Could not strip shared object: {e}")
