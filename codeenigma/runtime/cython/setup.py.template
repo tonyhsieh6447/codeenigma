@@ -10,10 +10,10 @@ is_macos = sys.platform == "darwin"
 extra_compile_args = [
     "-O3",
     "-fPIC",
-    "-fvisibility=hidden",
+    # "-fvisibility=hidden",  # REMOVED: This hides PyInit symbol!
     "-fdata-sections",
     "-ffunction-sections",
-    "-flto",
+    # "-flto",  # REMOVED: LTO can cause symbol issues
 ]
 
 extra_link_args = []
@@ -59,10 +59,25 @@ setup(
     zip_safe=False,
 )
 
+# Temporarily disable stripping to debug PyInit symbol issue
+# try:
+#     so_file = next(p for p in os.listdir('.') if p.startswith("codeenigma_runtime") and p.endswith(".so"))
+#     print(f"Stripping binary: {so_file}")
+#     # Use --strip-debug instead of -x to preserve dynamic symbols (including PyInit)
+#     subprocess.run(["strip", "--strip-debug", so_file], check=True)
+# except Exception as e:
+#     print(f"[Warning] Could not strip shared object: {e}")
+
+# Verify the .so file has PyInit symbol
 try:
     so_file = next(p for p in os.listdir('.') if p.startswith("codeenigma_runtime") and p.endswith(".so"))
-    print(f"Stripping binary: {so_file}")
-    # Use --strip-debug instead of -x to preserve dynamic symbols (including PyInit)
-    subprocess.run(["strip", "--strip-debug", so_file], check=True)
+    print(f"Checking symbols in {so_file}:")
+    result = subprocess.run(["nm", "-D", so_file], capture_output=True, text=True)
+    if "PyInit" in result.stdout:
+        print("✓ PyInit symbol found")
+    else:
+        print("✗ WARNING: PyInit symbol NOT found!")
+        print("All symbols:")
+        print(result.stdout)
 except Exception as e:
-    print(f"[Warning] Could not strip shared object: {e}")
+    print(f"[Warning] Could not check symbols: {e}")
