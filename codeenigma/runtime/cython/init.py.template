@@ -1,9 +1,47 @@
+from __future__ import annotations
 import platform
 import sys
-import rich
+import os
+import glob
 
 if platform.system() != $platform:
+    import rich
     rich.print("codeenigma_runtime was compiled for $platform. You are on a different OS.")
     sys.exit(1)
 
-from .codeenigma_runtime import execute_secure_code
+# Import execute_secure_code from the compiled .so file
+# The .so file has a platform-specific name like: codeenigma_runtime.cpython-38-x86_64-linux-gnu.so
+# We need to find and import it dynamically
+
+def _import_execute_secure_code():
+    """Dynamically import execute_secure_code from the compiled extension module."""
+    # Get the directory where this __init__.py is located
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Find the .so file (platform-specific naming)
+    so_files = glob.glob(os.path.join(current_dir, "codeenigma_runtime*.so"))
+
+    if not so_files:
+        raise ImportError(
+            f"Could not find codeenigma_runtime extension module (.so file) in {current_dir}"
+        )
+
+    # Import the extension module using importlib
+    import importlib.util
+    so_file = so_files[0]
+    spec = importlib.util.spec_from_file_location("codeenigma_runtime", so_file)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load module spec from {so_file}")
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    return module.execute_secure_code
+
+# Import execute_secure_code at module level
+execute_secure_code = _import_execute_secure_code()
+
+# Clean up the helper function
+del _import_execute_secure_code
+
+__all__ = ["execute_secure_code"]

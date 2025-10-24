@@ -1,3 +1,4 @@
+from __future__ import annotations
 import shutil
 import subprocess
 import sys
@@ -24,7 +25,11 @@ class StandardBundler(IBundler):  # pragma: no cover
         elif (project_root / "pyproject.toml").exists():
             try:
                 with open(project_root / "pyproject.toml", "rb") as f:
-                    import tomllib
+                    # For Python < 3.11, use tomli instead of tomllib
+                    try:
+                        import tomllib
+                    except ImportError:
+                        import tomli as tomllib
 
                     content = tomllib.load(f)
                     build_backend = content.get("build-system", {}).get(

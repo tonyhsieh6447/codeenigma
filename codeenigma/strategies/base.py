@@ -2,6 +2,7 @@
 Base class for obfuscation strategies.
 """
 
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from pathlib import Path
 from string import Template

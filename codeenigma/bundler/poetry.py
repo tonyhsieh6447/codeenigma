@@ -1,3 +1,4 @@
+from __future__ import annotations
 import shutil
 import subprocess
 from pathlib import Path
@@ -26,7 +27,11 @@ class PoetryBundler(IBundler):
 
         # check if the pyproject.toml is in poetry format
         with open(module_path.parent / "pyproject.toml", "rb") as f:
-            import tomllib
+            # For Python < 3.11, use tomli instead of tomllib
+            try:
+                import tomllib
+            except ImportError:
+                import tomli as tomllib
 
             content = tomllib.load(f)
             try:

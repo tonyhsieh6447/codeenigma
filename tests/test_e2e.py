@@ -2,7 +2,12 @@ import os
 import subprocess
 import sys
 import time
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
+try:
+    from datetime import UTC
+except ImportError:
+    from datetime import timezone
+    UTC = timezone.utc
 from pathlib import Path
 from unittest import TestCase
 
